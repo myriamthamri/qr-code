@@ -1,5 +1,5 @@
 # ==========================================
-# STAGES: Define your pipeline flow
+# STAGES
 # ==========================================
 stages:
   - lint
@@ -15,7 +15,9 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-# Cache Python dependencies between jobs
+# ==========================================
+# CACHE
+# ==========================================
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -23,7 +25,7 @@ cache:
     - venv/
 
 # ==========================================
-# TEMPLATE: Reusable config for Python jobs
+# TEMPLATE: Python Jobs
 # ==========================================
 .python_job:
   image: python:3.11-slim
@@ -34,22 +36,24 @@ cache:
     - pip install -r requirements.txt
 
 # ==========================================
-# STAGE 1: LINT (Code Quality - Flake8)
+# STAGE 1: LINT
 # ==========================================
 lint:
   extends: .python_job
   stage: lint
   before_script:
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
     - pip install flake8
   script:
     - flake8 . --max-line-length=100 --exclude=venv,__pycache__,.git
   rules:
     - if: $CI_COMMIT_BRANCH
-      exists:
-        - Dockerfile
 
 # ==========================================
-# STAGE 2: TEST (Pytest + 80% Coverage)
+# STAGE 2: TEST
 # ==========================================
 test:
   extends: .python_job
@@ -72,19 +76,15 @@ test:
       - coverage.xml
   rules:
     - if: $CI_COMMIT_BRANCH
-      exists:
-        - Dockerfile
 
 # ==========================================
-# STAGE 3: BUILD (Docker Image)
+# STAGE 3: DOCKER BUILD
 # ==========================================
 docker-build:
   image: docker:cli
   stage: build
   services:
     - docker:dind
-  variables:
-    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
@@ -101,7 +101,7 @@ docker-build:
         - Dockerfile
 
 # ==========================================
-# STAGE 4: DEPLOY (To VPS/Cloud)
+# STAGE 4: DEPLOY
 # ==========================================
 deploy:
   stage: deploy
