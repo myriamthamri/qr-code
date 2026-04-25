@@ -107,8 +107,10 @@ deploy:
   stage: deploy
   image: alpine:latest
   script:
-    - echo "Deployment skipped no VPS configured yet."
-    - echo "Docker image built and pushed successfully."
+    - echo "Livraison continue prête."
+    - echo "Image Docker disponible dans le GitLab Container Registry:"
+    - echo "$CI_REGISTRY_IMAGE:latest"
+    - echo "Déploiement manuel en attente d'un VPS/AWS/Azure."
   environment:
     name: production
   rules:
