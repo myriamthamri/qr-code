@@ -1,0 +1,7 @@
+flask
+qrcode
+pillow
+gunicorn
+pytest
+pytest-cov
+flake8
