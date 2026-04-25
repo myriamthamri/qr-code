@@ -107,7 +107,7 @@ deploy:
   stage: deploy
   image: alpine:latest
   script:
-    - echo "Deployment skipped: no VPS configured yet."
+    - echo "Deployment skipped no VPS configured yet."
     - echo "Docker image built and pushed successfully."
   environment:
     name: production
