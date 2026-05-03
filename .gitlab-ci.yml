@@ -6,7 +6,7 @@ stages:
   - test
   - build
   - deploy
-  -smoke-test
+  - smoke-test
 # ==========================================
 # GLOBAL VARIABLES
 # ==========================================
