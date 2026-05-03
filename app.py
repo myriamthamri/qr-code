@@ -38,6 +38,9 @@ def generate():
         'url': url
     })
 
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy', 'service': 'qr-code-generator'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

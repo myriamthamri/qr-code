@@ -6,7 +6,7 @@ stages:
   - test
   - build
   - deploy
-
+  -smoke-test
 # ==========================================
 # GLOBAL VARIABLES
 # ==========================================
@@ -118,3 +118,22 @@ deploy:
       exists:
         - Dockerfile
       when: manual
+
+# ==========================================
+# STAGE 5: SMOKE TEST (Post-Deploy Verification)
+# ==========================================
+smoke-test:
+  stage: smoke-test  # add this stage to your stages list too
+  image: curlimages/curl:latest
+  script:
+    - echo "Testing live deployment..."
+    - curl -f https://qr-code-j55k.onrender.com/health || exit 1
+    - curl -f https://qr-code-j55k.onrender.com/ || exit 1
+    - |
+      curl -X POST -H "Content-Type: application/json" \
+        -d '{"url":"https://gitlab.com"}' \
+        https://qr-code-j55k.onrender.com/generate || exit 1
+    - echo "All smoke tests passed!"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: on_success
