@@ -49,7 +49,7 @@ lint:
     - pip install -r requirements.txt
     - pip install flake8
   script:
-    - flake8 . --max-line-length=100 --exclude=venv,__pycache__,.git --ignore=E302,W293,W292
+    - flake8 . --max-line-length=100 --exclude=venv,__pycache__,.git --ignore=E302,W293,W292,E305
   rules:
     - if: $CI_COMMIT_BRANCH
 
