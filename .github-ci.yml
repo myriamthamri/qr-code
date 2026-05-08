@@ -1,0 +1,139 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ==========================================
+  # STAGE 1: LINT
+  # ==========================================
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install flake8
+          pip install -r requirements.txt
+
+      - name: Run flake8
+        run: flake8 . --max-line-length=100 --exclude=venv,__pycache__,.git --ignore=E302,W293,W292,E305
+
+  # ==========================================
+  # STAGE 2: TEST
+  # ==========================================
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        run: pytest --cov=. --cov-report=xml --cov-report=term-missing --cov-fail-under=80
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ==========================================
+  # STAGE 3: DOCKER BUILD
+  # ==========================================
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t qr-code:latest .
+
+      - name: Test Docker image runs
+        run: |
+          docker run -d -p 5000:5000 -e PORT=5000 --name qr-test qr-code:latest
+          sleep 5
+          docker logs qr-test
+          docker stop qr-test
+          docker rm qr-test
+
+  # ==========================================
+  # STAGE 4: SMOKE TEST (Post-Deploy)
+  # ==========================================
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Smoke tests on Railway
+        run: |
+          echo "=========================================="
+          echo "Testing live deployment on Railway..."
+          echo "=========================================="
+
+          # Test 1: Health endpoint
+          echo "[TEST 1] Checking /health endpoint..."
+          curl -f https://TON-URL-RAILWAY.app/health || exit 1
+          echo " Health check passed"
+          echo ""
+
+          # Test 2: Metrics endpoint
+          echo "[TEST 2] Checking /metrics endpoint..."
+          curl -f https://qr-code-production-102b.up.railway.app//metrics || exit 1
+          echo " Metrics endpoint reachable"
+          echo ""
+
+          # Test 3: Home page
+          echo "[TEST 3] Checking home page..."
+          curl -f https://TON-URL-RAILWAY.app/ || exit 1
+          echo " Home page reachable"
+          echo ""
+
+          # Test 4: QR generation API
+          echo "[TEST 4] Checking QR generation API..."
+          curl -X POST -H "Content-Type: application/json"             -d '{"url":"https://gitlab.com"}'             https://TON-URL-RAILWAY.app/generate || exit 1
+          echo " QR generation API working"
+          echo ""
+
+          echo "=========================================="
+          echo "All smoke tests passed!"
+          echo "=========================================="
