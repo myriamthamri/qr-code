@@ -20,6 +20,14 @@ def test_home_page():
 
     assert response.status_code == 200
 
+def test_metrics_endpoint():
+    client = app.test_client()
+    response = client.get('/metrics')
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert 'requests_total' in data
+    assert 'errors_total' in data
 
 def test_generate_qr_code():
     client = app.test_client()
