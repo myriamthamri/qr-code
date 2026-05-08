@@ -5,8 +5,14 @@ from io import BytesIO
 
 
 app = Flask(__name__)
+request_count = 0
+error_count = 0
 
-
+@app.before_request
+def before_request():
+    global request_count
+    request_count += 1
+    
 @app.route('/')
 def index():
     return render_template('qrcode.html')
@@ -41,6 +47,14 @@ def generate():
 @app.route('/health')
 def health():
     return jsonify({'status': 'healthy', 'service': 'qr-code-generator'}), 200
+
+@app.route('/metrics')
+def metrics():
+    return jsonify({
+        'requests_total': request_count,
+        'errors_total': error_count,
+        'service': 'qr-code-generator'
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
