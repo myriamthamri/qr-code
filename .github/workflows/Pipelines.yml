@@ -124,7 +124,7 @@ jobs:
 
           # Test 3: Home page
           echo "[TEST 3] Checking home page..."
-          curl -f https://TON-URL-RAILWAY.app/ || exit 1
+          curl -f https://qr-code-production-102b.up.railway.app/ || exit 1
           echo " Home page reachable"
           echo ""
 
