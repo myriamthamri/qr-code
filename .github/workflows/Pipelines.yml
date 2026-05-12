@@ -130,7 +130,7 @@ jobs:
 
           # Test 4: QR generation API
           echo "[TEST 4] Checking QR generation API..."
-          curl -X POST -H "Content-Type: application/json"             -d '{"url":"https://gitlab.com"}'             https://TON-URL-RAILWAY.app/generate || exit 1
+          curl -X POST -H "Content-Type: application/json"             -d '{"url":"https://gitlab.com"}'             https://qr-code-production-102b.up.railway.app/generate || exit 1
           echo " QR generation API working"
           echo ""
 
