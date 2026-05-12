@@ -112,13 +112,13 @@ jobs:
 
           # Test 1: Health endpoint
           echo "[TEST 1] Checking /health endpoint..."
-          curl -f https://TON-URL-RAILWAY.app/health || exit 1
+          curl -f https://qr-code-production-102b.up.railway.app/health || exit 1
           echo " Health check passed"
           echo ""
 
           # Test 2: Metrics endpoint
           echo "[TEST 2] Checking /metrics endpoint..."
-          curl -f https://qr-code-production-102b.up.railway.app//metrics || exit 1
+          curl -f https://qr-code-production-102b.up.railway.app/metrics || exit 1
           echo " Metrics endpoint reachable"
           echo ""
 
